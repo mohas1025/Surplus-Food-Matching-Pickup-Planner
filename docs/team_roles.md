@@ -11,7 +11,7 @@ every member must be able to explain the whole system.
 |---|---|---|
 | Member A *(name TBD)* | Algorithm & Optimization Lead | FIFO scheduler, greedy urgency-first strategy, priority rule and tie-breakers, complexity analysis, FIFO-vs-greedy comparison |
 | Member B *(name TBD)* | Data & Matching Lead | Input file format, validation, compatibility checks, capacity rules, data structures, test data |
-| Member C *(name TBD)* | Product & Quality Lead | Explainable output, metrics, automated tests, README, demo materials, command-line and dashboard polish |
+| Mohammadhossein Hashemi | Product & Quality Lead | Explainable output, metrics, automated tests, README, demo materials, command-line and dashboard polish |
 
 ## Code ownership map
 
