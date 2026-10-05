@@ -1,0 +1,6 @@
+recipient_id,org_name,accepted_food_types,capacity_lbs,area,closing_time
+R-201,Community Shelter,prepared_meals;bakery;produce,150,Downtown,20:00
+R-202,Eastside Food Pantry,canned_goods;produce;pizza,200,Eastside,17:00
+R-203,Campus Community Fridge,,60,Campus,22:00
+R-201,Duplicate Shelter,produce,100,Downtown,18:00
+R-205,Westside Youth Kitchen,produce;bakery,0,Westside,6pm

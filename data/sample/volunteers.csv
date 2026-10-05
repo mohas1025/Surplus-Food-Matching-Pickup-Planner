@@ -1,0 +1,6 @@
+volunteer_id,volunteer_name,vehicle_capacity_lbs,area,available_from,available_until,max_pickups
+V-301,Alex,60,Campus,12:00,16:00,3
+V-302,Jordan,120,Downtown,13:00,18:00,2
+V-303,Sam,40,Eastside,11:00,15:00,2
+V-304,Riley,80,Westside,14:00,19:00,2
+V-305,Taylor,30,Northside,12:00,20:00,3

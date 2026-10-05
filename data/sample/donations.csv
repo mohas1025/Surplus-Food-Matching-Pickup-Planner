@@ -1,0 +1,14 @@
+donation_id,donor_name,food_type,quantity_lbs,posted_time,ready_time,expiry_time,pickup_area
+D-1001,Campus Catering,prepared_meals,40,11:30,12:00,15:00,Campus
+D-1002,Downtown Bakery,bakery,50,11:45,12:30,20:00,Downtown
+D-1003,Fresh Mart Grocery,produce,100,12:00,13:00,21:00,Eastside
+D-1004,Spring Gala (campus event),prepared_meals,35,12:10,13:00,14:30,Campus
+D-1005,Corner Deli,dairy,25,12:20,12:45,16:00,Northside
+D-1006,Wholesale Club,canned_goods,130,12:30,13:00,23:00,Eastside
+D-1007,Frozen Foods Depot,frozen,30,12:40,13:00,18:00,Westside
+D-1008,Green Leaf Market,produce,60,12:50,13:30,19:00,Westside
+D-1009,Sunrise Cafe,prepared_meals,45,13:00,13:15,17:00,Downtown
+D-1010,Harvest Farmers Market,produce,70,13:10,14:00,20:00,Northside
+D-1011,Riverside Catering,prepared_meals,30,13:20,13:30,13:50,Downtown
+D-1012,Dairy Barn,dairy,40,13:30,14:00,17:30,Eastside
+D-1013,Conference Center Lunch,prepared_meals,110,13:40,14:00,18:00,Campus

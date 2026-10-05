@@ -1,0 +1,10 @@
+donation_id,donor_name,food_type,quantity_lbs,posted_time,ready_time,expiry_time,pickup_area
+D-2001,Campus Catering,prepared_meals,40,11:30,12:00,15:00,Campus
+D-2001,Copy of Campus Catering,prepared_meals,20,11:35,12:00,15:00,Campus
+D-2003,Downtown Bakery,bakery,-5,11:45,12:30,20:00,Downtown
+D-2004,Fresh Mart Grocery,produce,60,12:00,25:61,21:00,Eastside
+D-2005,Frozen Foods Depot,ice_cream,30,12:40,13:00,18:00,Westside
+D-2006,Spring Gala,prepared_meals,35,12:10,14:00,13:30,Campus
+D-2007,Mystery Donor,produce,20,12:20,12:45,16:00,Uptown
+2008,,dairy,abc,12:20,12:45,16:00,Northside
+D-2009,Green Leaf Market,produce,50,12:50,13:30,19:00,Westside
