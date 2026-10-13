@@ -35,11 +35,37 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  - {issue}")
         print()
 
-    print("FIFO decisions:")
-    for number, decision in enumerate(run_fifo(dataset), start=1):
-        print(f"{number:>3}. {decision.reason}")
-    return 0
+    #Run both FIFO and greedy at the same time
+    fifo_decisions = run_fifo(dataset)
+    greedy_decisions = run_greedy(dataset)
 
+    print("\nFIFO decisions:")
+    for number, decision in enumerate(fifo_decisions, start=1):
+        print(f"{number:>3}. [{decision.status}] {decision.reason}")
+
+    print("\nGreedy urgency-first decisions:")
+    for number, decision in enumerate(greedy_decisions, start=1):
+        print(f"{number:>3}. [{decision.status}] {decision.reason}")
+
+    fifo_metrics = calculate_metrics(dataset, fifo_decisions)
+    greedy_metrics = calculate_metrics(dataset, greedy_decisions)
+
+    print("\nFIFO metrics:")
+    for name, value in fifo_metrics.items():
+        print(f"  {name}: {value}")
+
+    print("\nGreedy metrics:")
+    for name, value in greedy_metrics.items():
+        print(f"  {name}: {value}")
+
+    # Compare greedy results against FIFO.
+    differences = compare_metrics(fifo_metrics, greedy_metrics)
+
+    print("\nGreedy minus FIFO:")
+    for name, value in differences.items():
+        print(f"  {name}: {value:+}")
+
+    return 0
 
 if __name__ == "__main__":
     sys.exit(main())
