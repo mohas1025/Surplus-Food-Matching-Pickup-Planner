@@ -8,7 +8,8 @@ For each donation, choose the first recipient and volunteer
 in input file order. All feasibility rules are shared with FIFO.
 """
 
-from .explain import explain_assignment, explain_unassigned, ordinal
+from .explain import explain_assignment, explain_priority, explain_unassigned, ordinal
+from .fifo import fifo_order
 from .matching import (
     apply_trip,
     diagnose_no_match,
@@ -35,12 +36,30 @@ def run_greedy(dataset: Dataset) -> list[Assignment]:
     """Schedule donations urgency-first, returning one decision per donation."""
     recipient_states, volunteer_states = initial_states(dataset)
     ordered_donations = greedy_order(dataset.donations)
+    arrival_position = {
+        donation.donation_id: position
+        for position, donation in enumerate(fifo_order(dataset.donations), start=1)
+    }
     decisions: list[Assignment] = []
 
     for position, donation in enumerate(ordered_donations, start=1):
         order_note = (
             f"It was processed {ordinal(position)} in greedy urgency order "
             f"(expires at {format_hhmm(donation.expiry_time)}). "
+        )
+        if position > 1:
+            previous = ordered_donations[position - 2]
+            order_note += (
+                f"It was considered after {previous.donation_id} because "
+                f"{explain_priority(previous, donation)}. "
+            )
+        arrived = arrival_position[donation.donation_id]
+        if position > arrived:
+            order_note += (
+                f"Deferred: it arrived {ordinal(arrived)} but the urgency rule moved it to "
+                f"{ordinal(position)}. "
+            )
+        order_note += (
             "The priority rule is earliest expiration first and then larger quantity, "
             "then earlier posting time. The remaining ties preserve input order."
         )

@@ -35,6 +35,20 @@ def explain_assignment(donation: Donation, trip: Trip, recipient: Recipient, cap
     )
 
 
+def explain_priority(first: Donation, second: Donation) -> str:
+    """Why the greedy rule considers `first` before `second`, naming the key that decided it."""
+    if first.expiry_time < second.expiry_time:
+        return (f"{first.donation_id} expires earlier ({format_hhmm(first.expiry_time)} vs "
+                f"{format_hhmm(second.expiry_time)})")
+    if first.quantity_lbs > second.quantity_lbs:
+        return (f"both expire at {format_hhmm(first.expiry_time)} and {first.donation_id} is larger "
+                f"({first.quantity_lbs} lbs vs {second.quantity_lbs} lbs)")
+    if first.posted_time < second.posted_time:
+        return (f"both expire at {format_hhmm(first.expiry_time)} with the same quantity and "
+                f"{first.donation_id} was posted earlier ({format_hhmm(first.posted_time)})")
+    return f"they tie on every priority key and {first.donation_id} comes first in the input file"
+
+
 def explain_unassigned(donation: Donation, why: str, order_note: str) -> str:
     return (
         f"Unassigned: Donation {donation.donation_id} ({describe_donation(donation)}) could not be "
