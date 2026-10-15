@@ -21,7 +21,8 @@ Primary owners review and lead changes in their area; anyone may contribute.
 |---|---|---|
 | Data model and validation | `rescueroute/models.py`, `rescueroute/loader.py`, `rescueroute/validation.py`, `data/` | Data & Matching Lead |
 | Feasibility checks | `rescueroute/matching.py` | Data & Matching Lead |
-| Scheduling | `rescueroute/fifo.py` | Algorithm & Optimization Lead |
+| Scheduling | `rescueroute/fifo.py`, `rescueroute/greedy.py` | Algorithm & Optimization Lead |
+| Metrics and comparison | `rescueroute/metric.py` | Algorithm & Optimization Lead |
 | Explanations and command line | `rescueroute/explain.py`, `rescueroute/__main__.py` | Product & Quality Lead |
 | Tests and documentation | `tests/`, `README.md`, `docs/` | Product & Quality Lead |
 

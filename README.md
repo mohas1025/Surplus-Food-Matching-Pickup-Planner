@@ -21,10 +21,10 @@ compatible recipients and volunteers in a way that is efficient, transparent, an
 | FIFO baseline | [rescueroute/fifo.py](rescueroute/fifo.py), [rescueroute/matching.py](rescueroute/matching.py) |
 | Greedy urgency-first strategy | [rescueroute/greedy.py](rescueroute/greedy.py) |
 | Metrics and FIFO-vs-greedy comparison | [rescueroute/metric.py](rescueroute/metric.py) |
-| Explanations | [rescueroute/explain.py](rescueroute/explain.py) |
+| Explanations (assigned, unassigned, deferred) | [rescueroute/explain.py](rescueroute/explain.py) |
 | Automated tests | [tests/](tests/) |
 
-RescueRoute runs from the command line.
+RescueRoute is a command-line application.
 
 ## Setup
 
@@ -72,7 +72,9 @@ Greedy urgency-first decisions:
  12. [unassigned] Unassigned: Donation D-1003 (100 lbs of produce from Fresh Mart Grocery)
     could not be assigned because every volunteer with a vehicle large enough for 100 lbs
     (Jordan (V-302)) had already reached their maximum number of pickups. It was processed
-    12th in greedy urgency order (expires at 21:00). ...
+    12th in greedy urgency order (expires at 21:00). It was considered after D-1002 because
+    D-1002 expires earlier (20:00 vs 21:00). Deferred: it arrived 3rd but the urgency rule
+    moved it to 12th. ...
 ```
 
 The same donation, D-1011, is lost under FIFO and rescued under greedy. D-1003 shows the
@@ -85,7 +87,7 @@ used up.
 pytest -v
 ```
 
-20 tests:
+24 tests:
 
 - `tests/test_validation.py`: valid rows, duplicate donation IDs, already-expired donations,
   invalid field values, empty and header-only files.
@@ -94,8 +96,11 @@ pytest -v
 - `tests/test_matching_edge_cases.py`: insufficient recipient capacity, vehicle too small,
   volunteer at maximum pickups, recipient closes before delivery, volunteer unavailable before
   delivery, two donations competing for the same capacity, exact capacity accepted.
+- `tests/test_greedy.py`: greedy priority order and tie-breakers, a case where FIFO and greedy
+  produce different results, a starvation case where greedy defers a long-shelf-life donation
+  and explains why, and the metric values.
 
-## How it works
+## Architecture
 
 ```
 CSV files -> loader.py -> validation.py -> Dataset -> fifo.py   -> metric.py -> comparison
@@ -110,6 +115,20 @@ CSV files -> loader.py -> validation.py -> Dataset -> fifo.py   -> metric.py -> 
 4. **Explain** each decision in plain language.
 5. **Measure** both runs with the same metrics and print the differences.
 
+## Data model
+
+Input records are immutable dataclasses in [rescueroute/models.py](rescueroute/models.py).
+All times are stored as minutes since midnight on one simulated day. Full column rules are in
+[docs/data_schema.md](docs/data_schema.md).
+
+| Entity | Fields |
+|---|---|
+| Donation | `donation_id`, `donor_name`, `food_type`, `quantity_lbs`, `posted_time`, `ready_time`, `expiry_time`, `pickup_area` |
+| Recipient | `recipient_id`, `org_name`, `accepted_food_types`, `capacity_lbs`, `area`, `closing_time` |
+| Volunteer | `volunteer_id`, `volunteer_name`, `vehicle_capacity_lbs`, `area`, `available_from`, `available_until`, `max_pickups` |
+| Assignment (output) | `donation_id`, `status`, `reason`, `recipient_id`, `volunteer_id`, `pickup_time`, `delivery_time` |
+| ValidationIssue (output) | `file`, `row`, `record_id`, `field`, `message` |
+
 ### Data structures
 
 | Need | Structure | Why |
@@ -123,6 +142,8 @@ CSV files -> loader.py -> validation.py -> Dataset -> fifo.py   -> metric.py -> 
 | Changing capacity / volunteer position | `RecipientState`, `VolunteerState` | Scheduling never modifies the validated input |
 | Assigned donation IDs (metrics) | `set` | O(1) check whether a donation was assigned |
 | Metrics | `dict` | One named value per metric, easy to print and compare |
+
+## Algorithms
 
 ### Feasibility rules
 
@@ -157,7 +178,10 @@ Schedule the donation with the **earliest expiry time** first. If two donations 
 same time, schedule the **larger quantity** first. If still tied, schedule the **earlier posted
 time** first. Any remaining ties keep input-file order. Each donation then goes to the first
 feasible recipient and volunteer in file order, using the same feasibility rules as FIFO.
-Every decision states the donation's position in greedy order and its expiry time.
+
+Every greedy decision states its position in greedy order, names the donation considered just
+before it and the priority key that decided, and, when the urgency rule moved it later than
+its arrival position, says that it was deferred.
 
 - **What it optimizes locally:** at each step it serves the donation closest to spoiling, so
   the most urgent food gets first claim on volunteers and recipient capacity.
@@ -183,7 +207,7 @@ Calculated for both strategies on the same input:
 | Food quantity at risk | Pounds of unassigned donations |
 | Urgent rescue rate | % of the 20% earliest-expiring donations (rounded up) that were assigned |
 | Recipient capacity utilization | Rescued pounds / total recipient capacity |
-| Volunteer capacity utilization | Rescued pounds / sum of all vehicle capacities (one load per volunteer). Volunteers can make several trips, so this can exceed 100%. |
+| Volunteer capacity utilization | Rescued pounds / total of (vehicle capacity x maximum pickups) |
 
 ## FIFO vs greedy comparison
 
@@ -197,7 +221,7 @@ Results on `data/sample` (13 donations, 5 recipients, 5 volunteers):
 | Food at risk (lbs) | 370 | 420 | +50 |
 | Urgent rescue rate | 66.67% | 100.0% | +33.33 |
 | Recipient capacity utilization | 57.25% | 50.0% | -7.25 |
-| Volunteer capacity utilization | 119.7% | 104.55% | -15.15 |
+| Volunteer capacity utilization | 52.67% | 46.0% | -6.67 |
 
 **What changed and why:**
 
@@ -226,7 +250,9 @@ With n donations, r recipients, and v volunteers:
   O(1) (dictionary lookup, frozenset membership), so O(n x r x v).
 - **Total:** O(n log n + n x r x v) time and O(n + r + v) memory.
 
-## Assumptions
+## Assumptions and limitations
+
+Assumptions:
 
 - All times are on one simulated day in `HH:MM` format; overnight windows are not supported.
 - All quantities are whole pounds.
@@ -234,6 +260,43 @@ With n donations, r recipients, and v volunteers:
 - One donation per trip; a volunteer delivers before the next pickup.
 - Capacity is a daily total per recipient.
 - Both strategies see all donations before scheduling starts.
+
+Limitations:
+
+- Simulated data and travel times only; there are no real maps, distances, or traffic.
+- Both strategies take the first feasible recipient-volunteer pair in file order, not the
+  best pair (for example, the closest volunteer or the least-loaded recipient).
+- Greedy sorts all donations up front and does not re-plan when new donations arrive.
+- Greedy can starve long-shelf-life donations, as shown in the comparison above.
+- The urgent rescue rate depends on the 20% cut-off for "urgent".
+- Output is command-line text only; there is no dashboard.
+- This is an educational prototype and must not be used for real food-rescue operations.
+
+## References
+
+- Python documentation, `collections.deque`:
+  [https://docs.python.org/3/library/collections.html#collections.deque](https://docs.python.org/3/library/collections.html#collections.deque)
+- Python documentation, Sorting Techniques (sort stability):
+  [https://docs.python.org/3/howto/sorting.html](https://docs.python.org/3/howto/sorting.html)
+- Python documentation, `dataclasses`:
+  [https://docs.python.org/3/library/dataclasses.html](https://docs.python.org/3/library/dataclasses.html)
+- Python documentation, `csv`:
+  [https://docs.python.org/3/library/csv.html](https://docs.python.org/3/library/csv.html)
+- pytest documentation: [https://docs.pytest.org/](https://docs.pytest.org/)
+- T. H. Cormen, C. E. Leiserson, R. L. Rivest, and C. Stein, *Introduction to Algorithms*,
+  3rd ed., MIT Press, 2009, Chapter 16: Greedy Algorithms.
+- J. Kleinberg and É. Tardos, *Algorithm Design*, Pearson, 2005, Chapter 4: Greedy Algorithms.
+
+### Libraries, data, and AI assistance
+
+- **External library:** pytest, for the test suite only. The application itself uses only the
+  Python standard library (`argparse`, `collections`, `csv`, `dataclasses`, `math`, `pathlib`,
+  `re`, `sys`).
+- **Data:** every input file in `data/` is simulated and was written by the team. No external
+  dataset was used.
+- **AI assistance:** Claude (Anthropic), used through Claude Code, helped draft parts of the
+  code, tests, and documentation. The team reviewed and tested all of it and is responsible
+  for understanding and explaining every part of the submitted code.
 
 ## Project structure
 
@@ -254,6 +317,35 @@ docs/             team roles and data schema
 tests/            pytest suite
 ```
 
-## Team
+## Team contributions
 
-See [docs/team_roles.md](docs/team_roles.md).
+Roles are described in [docs/team_roles.md](docs/team_roles.md). Every member is responsible
+for understanding the whole system.
+
+### Mohammadhossein Hashemi (Product & Quality Lead)
+
+- Created the GitHub repository and the project skeleton.
+- Wrote the team-role statement and the data schema.
+- Created the sample and invalid-example CSV files.
+- Wrote the CSV loader, data models, time utilities, and validation.
+- Wrote the feasibility checks (`matching.py`) and the FIFO baseline (`fifo.py`).
+- Wrote the explanation module (`explain.py`), including the greedy deferral explanations.
+- Wrote the command-line entry point and fixed it so FIFO and greedy both run.
+- Fixed the volunteer capacity utilization metric to count every allowed pickup.
+- Wrote 17 of the 24 automated tests (validation, FIFO, greedy order, FIFO-vs-greedy
+  difference, starvation, and metrics).
+- Wrote the README and the final submission report.
+
+### Hassan Alrubai (Data & Matching Lead)
+
+- Wrote 7 matching edge-case tests (pull request #1): insufficient recipient capacity, vehicle
+  too small, volunteer at maximum pickups, recipient closes before delivery, volunteer
+  unavailable before delivery, two donations competing for capacity, and exact capacity.
+- Recorded the Data & Matching role in the team-role statement.
+
+### Christina Castillo (Algorithm & Optimization Lead)
+
+- Implemented the greedy urgency-first scheduler (`greedy.py`).
+- Wrote the metrics module and the greedy-minus-FIFO comparison (`metric.py`).
+- Updated the command-line program to run both strategies and print the comparison.
+- Recorded the Algorithm & Optimization role in the team-role statement.
