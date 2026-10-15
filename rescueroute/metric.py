@@ -14,6 +14,8 @@ def calculate_metrics(
     Urgent rescue rate is the percentage of the earliest-expiring
     that were assigned.
     Capacity utilization uses total configured capacity as the denominator.
+    A volunteer can carry one vehicle load per pickup, so volunteer capacity
+    is vehicle capacity times maximum pickups.
     """
     donations_by_id = {
         donation.donation_id: donation
@@ -63,7 +65,7 @@ def calculate_metrics(
         for recipient in dataset.recipients.values()
     )
     total_volunteer_capacity = sum(
-        volunteer.vehicle_capacity_lbs
+        volunteer.vehicle_capacity_lbs * volunteer.max_pickups
         for volunteer in dataset.volunteers.values()
     )
 
