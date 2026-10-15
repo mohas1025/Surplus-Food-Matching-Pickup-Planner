@@ -4,7 +4,9 @@ import argparse
 import sys
 
 from .fifo import run_fifo
+from .greedy import run_greedy
 from .loader import DataFileError, load_dataset
+from .metric import calculate_metrics, compare_metrics
 
 DISCLAIMER = (
     "Educational prototype using simulated data. Not food-safety certified, not validated, "
@@ -15,7 +17,8 @@ DISCLAIMER = (
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="python -m rescueroute",
-        description="Run the FIFO baseline on simulated donation data and explain each decision.",
+        description="Run FIFO and greedy urgency-first on simulated donation data, explain each "
+                    "decision, and compare the metrics of both strategies.",
     )
     parser.add_argument("--data", default="data/sample",
                         help="folder containing donations.csv, recipients.csv, volunteers.csv")
@@ -35,11 +38,11 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  - {issue}")
         print()
 
-    #Run both FIFO and greedy at the same time
+    # Run both strategies on the same validated data.
     fifo_decisions = run_fifo(dataset)
     greedy_decisions = run_greedy(dataset)
 
-    print("\nFIFO decisions:")
+    print("FIFO decisions:")
     for number, decision in enumerate(fifo_decisions, start=1):
         print(f"{number:>3}. [{decision.status}] {decision.reason}")
 
@@ -66,6 +69,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  {name}: {value:+}")
 
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
