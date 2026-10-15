@@ -349,3 +349,9 @@ for understanding the whole system.
 - Wrote the metrics module and the greedy-minus-FIFO comparison (`metric.py`).
 - Updated the command-line program to run both strategies and print the comparison.
 - Recorded the Algorithm & Optimization role in the team-role statement.
+
+### Kirisauth Chan (Organizer & Submission)
+
+- My main contribution for this RescueRoute project was being the organizer and preparing for final submission.
+- I had looked over the final report and review for completeness, submitting the final materials through Canvas.
+- Through this project I wasn’t able to help with much coding and will be doing so moving forward with the next project as my teammates had finished the 3 roles that were given.
