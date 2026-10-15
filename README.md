@@ -350,7 +350,7 @@ for understanding the whole system.
 - Updated the command-line program to run both strategies and print the comparison.
 - Recorded the Algorithm & Optimization role in the team-role statement.
 
-### Kirisauth Chan (Organizer & Submission)
+### Kirisauth Chan (Organizer & Submission Demo)
 
 - My main contribution for this RescueRoute project was being the organizer and preparing for final submission.
 - I had looked over the final report and review for completeness, submitting the final materials through Canvas.
